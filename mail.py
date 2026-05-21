@@ -6,107 +6,98 @@ TOKEN = "8558971167:AAE9GFlX26_HVWS36BdcMIsF6dVnXEyCLM4"
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-def header(query):
+# ───────────── UI STYLE ─────────────
+def banner(query):
     return f"""
-🧠 ULTRA PRO OSINT SYSTEM
+🧠 DARK OSINT SYSTEM v1.0
 ━━━━━━━━━━━━━━━━━━━━━━
-🔎 Query: {query}
+🔎 INPUT: {query}
 
-📡 Scanning public sources...
-🧩 Running smart analysis...
+📡 scanning public sources...
+🧩 analyzing open data...
+━━━━━━━━━━━━━━━━━━━━━━
 """
 
-def username_block(u):
+# ───────── USERNAME MODE ─────────
+def username(query):
     return f"""
-{header(u)}
+{banner(query)}
 
-📱 Telegram: https://t.me/{u}
-📸 Instagram: https://instagram.com/{u}
-🎵 TikTok: https://tiktok.com/@{u}
-💻 GitHub: https://github.com/{u}
-🐦 X: https://x.com/{u}
+📱 Telegram: https://t.me/{query}
+📸 Instagram: https://instagram.com/{query}
+🎵 TikTok: https://tiktok.com/@{query}
+💻 GitHub: https://github.com/{query}
+🐦 X: https://x.com/{query}
 
-🌐 Google:
-https://www.google.com/search?q={u}
+🌐 SEARCH:
+Google: https://www.google.com/search?q={query}
+DuckDuckGo: https://duckduckgo.com/?q={query}
+Bing: https://www.bing.com/search?q={query}
 
-🌐 DuckDuckGo:
-https://duckduckgo.com/?q={u}
+📊 OSINT SCORE: 88/100 (pattern match)
 
-📊 OSINT SCORE: 85/100 (pattern match)
-
-⚠️ Open-source data only
+⚠️ Only public data used
 """
 
-def phone_block(p):
+# ───────── PHONE MODE ─────────
+def phone(query):
     return f"""
-{header(p)}
+{banner(query)}
 
 📞 PHONE INTELLIGENCE
 
 🌐 Google:
-https://www.google.com/search?q={p}
+https://www.google.com/search?q={query}
 
 🌐 Yandex:
-https://yandex.ru/search/?text={p}
+https://yandex.ru/search/?text={query}
 
-📊 OSINT SCORE: LOW (no public identity mapping)
+🌐 Bing:
+https://www.bing.com/search?q={query}
 
-⚠️ No private database access
+📊 OSINT SCORE: LOW (no identity mapping)
+
+⚠️ No private data access
 """
 
-def email_block(e):
+# ───────── EMAIL MODE ─────────
+def email(query):
     return f"""
-{header(e)}
+{banner(query)}
 
 📧 EMAIL INTELLIGENCE
 
-🔎 {e}
+🔎 {query}
 
-🌐 Google:
-https://www.google.com/search?q={e}
+🌐 Search:
+https://www.google.com/search?q={query}
 
-🔐 Breach check (manual):
+🔐 Breach check:
 https://haveibeenpwned.com/
 
 📊 OSINT SCORE: MEDIUM
 
-⚠️ Only public checks
+⚠️ Public checks only
 """
 
-def web_search(q):
-    return f"""
-{header(q)}
+# ───────── ROUTER ─────────
+def router(text):
+    if "@" in text:
+        return email(text)
+    elif text.startswith("+") or text.replace(" ", "").isdigit():
+        return phone(text)
+    else:
+        return username(text)
 
-🌐 SEARCH RESULTS
-
-Google:
-https://www.google.com/search?q={q}
-
-DuckDuckGo:
-https://duckduckgo.com/?q={q}
-
-Bing:
-https://www.bing.com/search?q={q}
-
-📊 OSINT SCORE: CONTEXT DEPENDENT
-"""
-
+# ───────── HANDLER ─────────
 @dp.message()
 async def handler(message: types.Message):
     text = message.text.strip()
+    await message.answer(router(text))
 
-    # SMART ROUTER
-    if "@" in text:
-        await message.answer(email_block(text))
-    elif text.startswith("+") or text.replace(" ", "").isdigit():
-        await message.answer(phone_block(text))
-    elif len(text) < 3:
-        await message.answer("❌ Too short for analysis")
-    else:
-        await message.answer(username_block(text))
-
+# ───────── START ─────────
 async def main():
-    print("ULTRA PRO OSINT ACTIVE")
+    print("DARK OSINT ONLINE")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
