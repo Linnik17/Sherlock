@@ -1,103 +1,87 @@
 import asyncio
+import os
 from aiogram import Bot, Dispatcher, types
 
-TOKEN = "8558971167:AAE9GFlX26_HVWS36BdcMIsF6dVnXEyCLM4"
+TOKEN = os.getenv("TOKEN")
+
+if not TOKEN:
+    raise ValueError("TOKEN is not set in environment variables")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ───────────── UI STYLE ─────────────
-def banner(query):
+def is_phone(text):
+    t = text.replace(" ", "").replace("-", "")
+    return t.startswith("+") or t.isdigit()
+
+def is_email(text):
+    return "@" in text and "." in text
+
+def build_username(text):
     return f"""
-🧠 DARK OSINT SYSTEM v1.0
-━━━━━━━━━━━━━━━━━━━━━━
-🔎 INPUT: {query}
+🧠 OSINT REPORT
 
-📡 scanning public sources...
-🧩 analyzing open data...
-━━━━━━━━━━━━━━━━━━━━━━
-"""
+🔎 Username: {text}
 
-# ───────── USERNAME MODE ─────────
-def username(query):
-    return f"""
-{banner(query)}
-
-📱 Telegram: https://t.me/{query}
-📸 Instagram: https://instagram.com/{query}
-🎵 TikTok: https://tiktok.com/@{query}
-💻 GitHub: https://github.com/{query}
-🐦 X: https://x.com/{query}
-
-🌐 SEARCH:
-Google: https://www.google.com/search?q={query}
-DuckDuckGo: https://duckduckgo.com/?q={query}
-Bing: https://www.bing.com/search?q={query}
-
-📊 OSINT SCORE: 88/100 (pattern match)
-
-⚠️ Only public data used
-"""
-
-# ───────── PHONE MODE ─────────
-def phone(query):
-    return f"""
-{banner(query)}
-
-📞 PHONE INTELLIGENCE
+📱 Telegram: https://t.me/{text}
+📸 Instagram: https://instagram.com/{text}
+🎵 TikTok: https://tiktok.com/@{text}
+💻 GitHub: https://github.com/{text}
 
 🌐 Google:
-https://www.google.com/search?q={query}
+https://www.google.com/search?q={text}
 
-🌐 Yandex:
-https://yandex.ru/search/?text={query}
+🌐 DuckDuckGo:
+https://duckduckgo.com/?q={text}
 
-🌐 Bing:
-https://www.bing.com/search?q={query}
-
-📊 OSINT SCORE: LOW (no identity mapping)
-
-⚠️ No private data access
+📊 Status: public sources only
 """
 
-# ───────── EMAIL MODE ─────────
-def email(query):
+def build_phone(text):
     return f"""
-{banner(query)}
+📞 PHONE OSINT REPORT
 
-📧 EMAIL INTELLIGENCE
+🔎 Number: {text}
 
-🔎 {query}
+🌐 Google:
+https://www.google.com/search?q={text}
 
-🌐 Search:
-https://www.google.com/search?q={query}
+⚠️ Only public sources
+"""
+
+def build_email(text):
+    return f"""
+📧 EMAIL OSINT REPORT
+
+🔎 {text}
+
+🌐 Google:
+https://www.google.com/search?q={text}
 
 🔐 Breach check:
 https://haveibeenpwned.com/
 
-📊 OSINT SCORE: MEDIUM
-
-⚠️ Public checks only
+⚠️ Public data only
 """
 
-# ───────── ROUTER ─────────
 def router(text):
-    if "@" in text:
-        return email(text)
-    elif text.startswith("+") or text.replace(" ", "").isdigit():
-        return phone(text)
+    if is_email(text):
+        return build_email(text)
+    elif is_phone(text):
+        return build_phone(text)
     else:
-        return username(text)
+        return build_username(text)
 
-# ───────── HANDLER ─────────
 @dp.message()
 async def handler(message: types.Message):
-    text = message.text.strip()
-    await message.answer(router(text))
+    try:
+        text = message.text.strip()
+        await message.answer(router(text))
+    except Exception as e:
+        await message.answer("⚠️ error processing request")
 
-# ───────── START ─────────
 async def main():
-    print("DARK OSINT ONLINE")
+    print("bot started")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
